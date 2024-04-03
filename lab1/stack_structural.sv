@@ -1,32 +1,7 @@
 
-// module stack_structural_easy(
-//     output wire[3:0] O_DATA, 
-//     input wire RESET, 
-//     input wire CLK, 
-//     input wire[1:0] COMMAND, 
-//     input wire[2:0] INDEX,
-//     input wire[3:0] I_DATA
-//     ); 
-//     wire [7:0]out;
-//     _3to8decodder dec(.bit0(COMMAND[0]), .bit1(COMMAND[1]), .bit2(1'b0), .q(out));
-//     wire push, pop, get;
-//     and(push, CLK, out[1]);
-//     and(pop, CLK, out[2]);
-//     and(get, CLK, out[3]);
-
-//     cellue cel0(.push(push), .reset(RESET), .pop(pop), .get(get), .index(INDEX), .inBit(I_DATA[0]), .outBit(O_DATA[0]));
-//     cellue cel1(.push(push), .reset(RESET), .pop(pop), .get(get), .index(INDEX), .inBit(I_DATA[1]), .outBit(O_DATA[1]));
-//     cellue cel2(.push(push), .reset(RESET), .pop(pop), .get(get), .index(INDEX), .inBit(I_DATA[2]), .outBit(O_DATA[2]));
-//     cellue cel3(.push(push), .reset(RESET), .pop(pop), .get(get), .index(INDEX), .inBit(I_DATA[3]), .outBit(O_DATA[3]));
-    
-//     // put your code here, the other module (stack_structural_normal) must be deleted
-  
-
-// endmodule
-
 module DTrigger(
-    input d, clk, reset,
-    output q, nq
+    output q, nq,
+    input d, clk, reset
 );
     wire _1, _2, _3, _4;
     not(_1, d);
@@ -39,8 +14,9 @@ endmodule
 
 
 module _3to8decodder(
-    input bit0, bit1, bit2,
-    output [7:0]q
+    output [7:0]q,
+    input bit0, bit1, bit2
+    
 );
     wire nbit0, nbit1, nbit2;
     not(nbit0, bit0);
@@ -60,9 +36,10 @@ endmodule
 
 
 module littleCellue(
+    output q0, q1, q2, q3, q4,
     input d0, d1, d2, d3, d4,
-    input clk, reset,
-    output q0, q1, q2, q3, q4
+    input clk, reset
+    
 );
     DTrigger trigger0(.d(d0), .clk(clk), .reset(reset), .q(q0));
     DTrigger trigger1(.d(d1), .clk(clk), .reset(reset), .q(q1));
@@ -73,8 +50,9 @@ endmodule
 
 
 module convert(
-    input pushQ, push, pop, popQ,
-    output q
+    output q,
+    input pushQ, push, pop, popQ
+    
 );
     wire w1, w2;
     and(w1, push, pushQ);
@@ -84,18 +62,23 @@ endmodule
 
 
 module MUX(
+    output q,
     input bit0, bit1, bit2,
-    input d0, d1, d2, d3, d4,
-    output q
+    input d0, d1, d2, d3, d4
+    
 
 );
     wire [7:0]out;
     wire a0, a1, a2, a3, a4;
+    wire index0, index1, index2;
 
     _3to8decodder dec(.bit0(bit0), .bit1(bit1), .bit2(bit2), .q(out));
-    and(a0, d0, out[0]);
-    and(a1, d1, out[1]);
-    and(a2, d2, out[2]);
+    or(index0, out[0], out[5]);
+    or(index1, out[1], out[6]);
+    or(index2, out[2], out[7]);
+    and(a0, d0, index0);
+    and(a1, d1, index1);
+    and(a2, d2, index2);
     and(a3, d3, out[3]);
     and(a4, d4, out[4]);
     or(q, a0, a1, a2, a3, a4);
@@ -103,9 +86,10 @@ endmodule
 
 
 module cellue(
+    output outBit,
     input [2:0]index,
-    input push, pop, get, inBit,reset,
-    output outBit
+    input push, pop, get, inBit,reset
+    
 );
     wire shift, notShift;
     or(shift, push, pop);
@@ -156,15 +140,17 @@ input wire RESET,
     cellue cel2(.push(push), .reset(RESET), .pop(pop), .get(get), .index(INDEX), .inBit(IO_DATA[2]), .outBit(out[2]));
     cellue cel3(.push(push), .reset(RESET), .pop(pop), .get(get), .index(INDEX), .inBit(IO_DATA[3]), .outBit(out[3]));
 
-    wire write;
-    not(write, COMMAND[1]);
+    wire write, show;
     
-    cmos(IO_DATA[0], out[0], COMMAND[1], write);
-    cmos(IO_DATA[1], out[1], COMMAND[1], write);
-    cmos(IO_DATA[2], out[2], COMMAND[1], write);
-    cmos(IO_DATA[3], out[3], COMMAND[1], write);
+    and(show, COMMAND[1], CLK);
+    not(write, show);
+    
+    cmos(IO_DATA[0], out[0], show, write);
+    cmos(IO_DATA[1], out[1], show, write);
+    cmos(IO_DATA[2], out[2], show, write);
+    cmos(IO_DATA[3], out[3], show, write);
 
     
-    // put your code here, the other module (stack_structural_easy) must be deleted
+
 
 endmodule
